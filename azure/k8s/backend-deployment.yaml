@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-deployment
+spec:
+  replicas: 3 # Start with 3 copies for production
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+      - name: backend
+        # [!!] YOU MUST UPDATE THIS IMAGE PATH [!!]
+        # This path must match what you push in your 'docker-build.yml'
+        image: __ACR_LOGIN_SERVER__/backend:latest
+        ports:
+        - containerPort: 8000 # The port your FastAPI app runs on
+        envFrom:
+        - configMapRef:
+            name: app-configmap
+        - secretRef:
+            name: app-secrets

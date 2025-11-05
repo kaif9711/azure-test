@@ -1,0 +1,14 @@
+{
+  "lessons": [
+    { "id": 1, "title": "Lesson 1: Introduction", "instructions": "Overview of the system and setup steps.", "exercises": ["Open the demo interface", "Run the backend API"] },
+    { "id": 2, "title": "Lesson 2: Data Ingestion", "instructions": "Load CSV and validate schema.", "exercises": ["Place dataset in data/", "Run dataset test script"] },
+    { "id": 3, "title": "Lesson 3: Preprocessing", "instructions": "Feature engineering and cleaning.", "exercises": ["Scale numeric features", "Encode categories"] },
+    { "id": 4, "title": "Lesson 4: Model Training", "instructions": "Train baseline models and compare.", "exercises": ["Train logistic regression", "Evaluate ROC AUC"] },
+    { "id": 5, "title": "Lesson 5: Prediction API", "instructions": "Use the claims prediction endpoint.", "exercises": ["Submit a sample claim", "Interpret risk score"] },
+    { "id": 6, "title": "Lesson 6: Document Validation", "instructions": "Upload and validate documents.", "exercises": ["Attach PDF receipt", "Check validation score"] },
+    { "id": 7, "title": "Lesson 7: Patterns & Rules", "instructions": "Manage fraud patterns.", "exercises": ["Create a new pattern", "Apply to claims"] },
+    { "id": 8, "title": "Lesson 8: Metrics", "instructions": "View fraud statistics.", "exercises": ["Open dashboard", "Check risk distribution"] },
+    { "id": 9, "title": "Lesson 9: Admin Tasks", "instructions": "User roles and permissions.", "exercises": ["Create admin user", "Assign roles"] },
+    { "id": 10, "title": "Lesson 10: Deployment", "instructions": "Run with Docker Compose.", "exercises": ["Start all services", "Access frontend via Nginx"] }
+  ]
+}

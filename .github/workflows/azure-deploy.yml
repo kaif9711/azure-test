@@ -1,0 +1,108 @@
+name: 1 - Build and Deploy Full Project
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: # <-- ADD THIS to run it manually
+
+jobs:
+  # --- JOB 1: BUILD INFRASTRUCTURE ---
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./azure/terraform
+    
+    env:
+      TF_VAR_mysql_admin_login: ${{ secrets.MYSQL_ADMIN_LOGIN }}
+      TF_VAR_mysql_admin_password: ${{ secrets.MYSQL_ADMIN_PASSWORD }}
+      TF_VAR_aks_admin_group_object_id: ${{ secrets.AKS_ADMIN_GROUP_ID }}
+      
+    outputs:
+      ACR_LOGIN_SERVER: ${{ steps.terraform.outputs.ACR_LOGIN_SERVER }}
+      AKS_CLUSTER_NAME: ${{ steps.terraform.outputs.AKS_CLUSTER_NAME }}
+      RESOURCE_GROUP_NAME: ${{ steps.terraform.outputs.RESOURCE_GROUP_NAME }}
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Configure Azure Credentials
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+      - name: Get Terraform Outputs
+        id: terraform
+        run: |
+          echo "ACR_LOGIN_SERVER=$(terraform output -raw AZURE_ACR_LOGIN_SERVER)" >> $GITHUB_OUTPUT
+          echo "AKS_CLUSTER_NAME=$(terraform output -raw AZURE_AKS_CLUSTER_NAME)" >> $GITHUB_OUTPUT
+          echo "RESOURCE_GROUP_NAME=$(terraform output -raw AZURE_RESOURCE_GROUP_NAME)" >> $GITHUB_OUTPUT
+
+  # --- JOB 2: BUILD DOCKER IMAGES (Runs after infra is built) ---
+  build-and-push-docker:
+    runs-on: ubuntu-latest
+    needs: deploy-infrastructure
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          login-server: ${{ needs.deploy-infrastructure.outputs.ACR_LOGIN_SERVER }}
+          # We get the username/password directly from ACR
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+        env:
+          ACR_USERNAME: ${{ needs.deploy-infrastructure.outputs.ACR_USERNAME }}
+          ACR_PASSWORD: ${{ needs.deploy-infrastructure.outputs.ACR_PASSWORD }}
+
+      - name: Build and Push Backend Image
+        run: |
+          docker build -t ${{ needs.deploy-infrastructure.outputs.ACR_LOGIN_SERVER }}/backend:latest ./backend_folder
+          docker push ${{ needs.deploy-infrastructure.outputs.ACR_LOGIN_SERVER }}/backend:latest
+          
+      - name: Build and Push Frontend Image
+        run: |
+          docker build -t ${{ needs.deploy-infrastructure.outputs.ACR_LOGIN_SERVER }}/frontend:latest ./frontend_folder
+          docker push ${{ needs.deploy-infrastructure.outputs.ACR_LOGIN_SERVER }}/frontend:latest
+
+  # --- JOB 3: DEPLOY APPLICATION (Runs after docker images are built) ---
+  deploy-application:
+    runs-on: ubuntu-latest
+    needs: [deploy-infrastructure, build-and-push-docker] # Waits for both
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure Azure Credentials
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set up Kubeconfig for AKS
+        run: |
+          az aks get-credentials --resource-group ${{ needs.deploy-infrastructure.outputs.RESOURCE_GROUP_NAME }} --name ${{ needs.deploy-infrastructure.outputs.AKS_CLUSTER_NAME }} --admin
+          
+      # --- [!!] NEW STEP: Find and Replace ACR Name [!!] ---
+      - name: Replace ACR placeholder in k8s files
+        run: |
+          sed -i 's|__ACR_LOGIN_SERVER__|${{ needs.deploy-infrastructure.outputs.ACR_LOGIN_SERVER }}|g' ./azure/k8s/backend-deployment.yaml
+          sed -i 's|__ACR_LOGIN_SERVER__|${{ needs.deploy-infrastructure.outputs.ACR_LOGIN_SERVER }}|g' ./azure/k8s/frontend-deployment.yaml
+          
+      - name: Deploy to Kubernetes
+        run: |
+          kubectl apply -f ./azure/k8s/

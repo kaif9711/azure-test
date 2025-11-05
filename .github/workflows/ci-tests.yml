@@ -1,0 +1,38 @@
+name: CI Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test-and-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+        
+      # --- Add your testing steps here ---
+      # e.g., Set up Python/Node.js
+      
+      - name: Run Backend Linting (flake8)
+        run: |
+          pip install flake8
+          flake8 my_backend_folder/
+          
+      - name: Run Backend Unit Tests (pytest)
+        run: |
+          pip install pytest
+          pytest my_backend_folder/
+          
+      - name: Run Frontend Linting (eslint)
+        run: |
+          cd my_frontend_folder/
+          npm install
+          npm run lint
+          
+      - name: Run Security Scan (Trivy)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'

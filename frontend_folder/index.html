@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraudulent Claim Detection Agent</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <meta name="description" content="AI-powered insurance fraud detection system">
+    
+    <!-- Bootstrap CSS for responsive design -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for data visualization -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#home">
+                <i class="fas fa-shield-alt me-2"></i>
+                <span>Fraud Detection Agent</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#home" onclick="showSection('home')">
+                            <i class="fas fa-home me-1"></i><span>Home</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" id="nav-dashboard" style="display: none;">
+                        <a class="nav-link" href="#dashboard" onclick="showSection('dashboard')">
+                            <i class="fas fa-tachometer-alt me-1"></i><span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" id="nav-claims" style="display: none;">
+                        <a class="nav-link" href="#claims" onclick="showSection('claims')">
+                            <i class="fas fa-file-medical me-1"></i><span>Claims</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" id="nav-admin" style="display: none;">
+                        <a class="nav-link" href="#admin" onclick="showSection('admin')">
+                            <i class="fas fa-users-cog me-1"></i><span>Admin</span>
+                        </a>
+                    </li>
+                    
+                </ul>
+                <ul class="navbar-nav">
+                    <li class="nav-item" id="nav-login">
+                        <a class="nav-link" href="#" onclick="showLoginModal()">
+                            <i class="fas fa-sign-in-alt me-1"></i><span>Login</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" id="nav-register">
+                        <a class="nav-link" href="#" onclick="showRegisterModal()">
+                            <i class="fas fa-user-plus me-1"></i><span>Register</span>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown" id="nav-user" style="display: none;">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user me-1"></i><span id="username-display"></span>
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="showProfileModal()">
+                                <i class="fas fa-user-edit me-1"></i><span>Profile</span>
+                            </a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#" onclick="logout()">
+                                <i class="fas fa-sign-out-alt me-1"></i><span>Logout</span>
+                            </a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <div class="container-fluid mt-5 pt-3">
+        <!-- Loading Spinner -->
+        <div id="loading-spinner" class="d-none">
+            <div class="d-flex justify-content-center align-items-center" style="height: 200px;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Container -->
+        <div id="alert-container"></div>
+
+        <!-- Home Section -->
+        <div id="home-section" class="content-section">
+            <div class="row">
+                <div class="col-12">
+                    <div class="hero-section text-center py-5 mb-4">
+                        <h1 class="display-4 fw-bold text-primary mb-4">
+                            <i class="fas fa-shield-alt me-3"></i>
+                            AI-Powered Fraud Detection
+                        </h1>
+                        <p class="lead mb-4">Protect your insurance business with advanced machine learning algorithms that detect fraudulent claims with unprecedented accuracy.</p>
+                        <div class="d-grid gap-2 d-md-flex justify-content-center">
+                            <button class="btn btn-primary btn-lg me-md-2" onclick="showRegisterModal()">
+                                <i class="fas fa-rocket me-2"></i><span>Get Started</span>
+                            </button>
+                            <button class="btn btn-outline-primary btn-lg" onclick="showSection('features')">
+                                <i class="fas fa-info-circle me-2"></i><span>Learn More</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="feature-icon mb-3">
+                                <i class="fas fa-brain fa-3x text-primary"></i>
+                            </div>
+                            <h5 class="card-title">AI-Powered Analysis</h5>
+                            <p class="card-text">Advanced machine learning models analyze claim patterns, documents, and user behavior to identify potential fraud.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="feature-icon mb-3">
+                                <i class="fas fa-file-shield fa-3x text-success"></i>
+                            </div>
+                            <h5 class="card-title">Document Verification</h5>
+                            <p class="card-text">Sophisticated document validation using OCR, image analysis, and authenticity checking to detect forged documents.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm">
+                        <div class="card-body text-center">
+                            <div class="feature-icon mb-3">
+                                <i class="fas fa-chart-line fa-3x text-warning"></i>
+                            </div>
+                            <h5 class="card-title">Real-time Monitoring</h5>
+                            <p class="card-text">Continuous monitoring of claim submissions with instant risk assessment and automated decision making.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-5">
+                <div class="col-12">
+                    <div class="stats-section bg-light rounded p-4">
+                        <h3 class="text-center mb-4">System Performance</h3>
+                        <div class="row text-center">
+                            <div class="col-md-3">
+                                <div class="stat-item">
+                                    <h2 class="text-primary" id="total-claims">0</h2>
+                                    <p class="text-muted">Claims Processed</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-item">
+                                    <h2 class="text-success" id="accuracy-rate">0%</h2>
+                                    <p class="text-muted">Accuracy Rate</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-item">
+                                    <h2 class="text-warning" id="fraud-detected">0</h2>
+                                    <p class="text-muted">Frauds Detected</p>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="stat-item">
+                                    <h2 class="text-info" id="money-saved">$0</h2>
+                                    <p class="text-muted">Money Saved</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Section -->
+        <div id="dashboard-section" class="content-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2><i class="fas fa-tachometer-alt me-2"></i><span>Dashboard</span></h2>
+                    <p class="text-muted">Overview of your claims and system performance</p>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="dashboard-total-claims">0</h4>
+                                    <p class="mb-0">Total Claims</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-file-medical fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="dashboard-approved-claims">0</h4>
+                                    <p class="mb-0">Approved</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-check-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="dashboard-pending-claims">0</h4>
+                                    <p class="mb-0">Under Review</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-clock fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="dashboard-rejected-claims">0</h4>
+                                    <p class="mb-0">Rejected</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-times-circle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-line me-2"></i><span>Claims Trend</span></h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="claims-trend-chart" width="400" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-pie me-2"></i><span>Risk Distribution</span></h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="risk-distribution-chart" width="200" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5><i class="fas fa-list me-2"></i><span>Recent Claims</span></h5>
+                            <button class="btn btn-primary btn-sm" onclick="showSubmitClaimModal()">
+                                <i class="fas fa-plus me-1"></i><span>New Claim</span>
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="recent-claims-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Claim ID</th>
+                                            <th>Amount</th>
+                                            <th>Date</th>
+                                            <th>Status</th>
+                                            <th>Risk Score</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Dynamic content will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Claims Section -->
+        <div id="claims-section" class="content-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h2><i class="fas fa-file-medical me-2"></i><span>Claims Management</span></h2>
+                        <p class="text-muted">Manage and track your insurance claims</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="showSubmitClaimModal()">
+                        <i class="fas fa-plus me-1"></i><span>Submit New Claim</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                        <input type="text" class="form-control" id="claims-search" placeholder="Search claims...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="claims-status-filter">
+                        <option value="">All Statuses</option>
+                        <option value="submitted">Submitted</option>
+                        <option value="under_review">Under Review</option>
+                        <option value="approved">Approved</option>
+                        <option value="rejected">Rejected</option>
+                        <option value="investigation">Investigation</option>
+                        <option value="closed">Closed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <select class="form-select" id="claims-sort">
+                        <option value="created_at_desc">Newest First</option>
+                        <option value="created_at_asc">Oldest First</option>
+                        <option value="amount_desc">Highest Amount</option>
+                        <option value="amount_asc">Lowest Amount</option>
+                        <option value="risk_score_desc">Highest Risk</option>
+                        <option value="risk_score_asc">Lowest Risk</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover" id="claims-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Claim ID</th>
+                                            <th>Policy</th>
+                                            <th>Amount</th>
+                                            <th>Incident Date</th>
+                                            <th>Status</th>
+                                            <th>Risk Score</th>
+                                            <th>Documents</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Dynamic content will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                            <nav aria-label="Claims pagination">
+                                <ul class="pagination justify-content-center" id="claims-pagination">
+                                    <!-- Dynamic pagination will be loaded here -->
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Section -->
+        <div id="admin-section" class="content-section" style="display: none;">
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h2><i class="fas fa-users-cog me-2"></i><span>Admin Dashboard</span></h2>
+                    <p class="text-muted">System administration and user management</p>
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="admin-total-users">0</h4>
+                                    <p class="mb-0">Total Users</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-users fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="admin-fraud-rate">0%</h4>
+                                    <p class="mb-0">Fraud Rate</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-exclamation-triangle fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="admin-accuracy">0%</h4>
+                                    <p class="mb-0">ML Accuracy</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-bullseye fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <h4 id="admin-investigations">0</h4>
+                                    <p class="mb-0">Active Investigations</p>
+                                </div>
+                                <div class="align-self-center">
+                                    <i class="fas fa-search fa-2x"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-users me-2"></i><span>User Management</span></h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm" id="admin-users-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Name</th>
+                                            <th>Role</th>
+                                            <th>Status</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Dynamic content will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-chart-bar me-2"></i><span>ML Model Performance</span></h5>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="ml-performance-chart" width="300" height="150"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5><i class="fas fa-history me-2"></i><span>Audit Log</span></h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm" id="audit-log-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Timestamp</th>
+                                            <th>User</th>
+                                            <th>Action</th>
+                                            <th>Resource</th>
+                                            <th>Details</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <!-- Dynamic content will be loaded here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        
+    </div>
+
+    <!-- Login Modal -->
+    <div class="modal fade" id="loginModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-sign-in-alt me-2"></i><span>Login</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="login-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="login-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="login-email" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="login-password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="login-password" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="remember-me">
+                            <label class="form-check-label" for="remember-me">Remember me</label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-sign-in-alt me-1"></i><span>Login</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Register Modal -->
+    <div class="modal fade" id="registerModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i><span>Register</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="register-form">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="register-first-name" class="form-label">First Name</label>
+                                    <input type="text" class="form-control" id="register-first-name" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="register-last-name" class="form-label">Last Name</label>
+                                    <input type="text" class="form-control" id="register-last-name" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="register-email" required autocomplete="email">
+                            <div id="register-email-feedback" class="form-text"></div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-password" class="form-label">Password</label>
+                            <input type="password" class="form-control" id="register-password" required>
+                            <div class="form-text">Password must be at least 8 characters long</div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="register-confirm-password" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" id="register-confirm-password" required>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="terms-checkbox" required>
+                            <label class="form-check-label" for="terms-checkbox">
+                                <span>I agree to the </span><a href="#" onclick="showTermsModal()">Terms and Conditions</a>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus me-1"></i><span>Register</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submit Claim Modal -->
+    <div class="modal fade" id="submitClaimModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-file-medical me-2"></i><span>Submit New Claim</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="submit-claim-form" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="claim-policy" class="form-label">Policy</label>
+                            <select class="form-select" id="claim-policy" required>
+                                <option value="">Select a policy</option>
+                                <!-- Options will be loaded dynamically -->
+                            </select>
+                            <div class="form-text d-flex justify-content-between align-items-center">
+                                <span>If you have no policy, create one.</span>
+                                <button type="button" class="btn btn-sm btn-outline-primary" onclick="showCreatePolicyModal()">
+                                    <i class="fas fa-plus"></i> <span>New Policy</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="claim-amount" class="form-label">Claim Amount</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        <input type="number" class="form-control" id="claim-amount" 
+                                               step="0.01" min="0" required>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="incident-date" class="form-label">Incident Date</label>
+                                    <input type="date" class="form-control" id="incident-date" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label for="incident-location" class="form-label">Incident Location</label>
+                <input type="text" class="form-control" id="incident-location" 
+                    placeholder="City, State or Address">
+                        </div>
+                        <div class="mb-3">
+                            <label for="incident-description" class="form-label">Incident Description</label>
+                            <textarea class="form-control" id="incident-description" rows="4" 
+                                      placeholder="Please describe what happened..." required></textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label for="claim-documents" class="form-label">Supporting Documents</label>
+                            <input type="file" class="form-control" id="claim-documents" 
+                                   multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx">
+                            <div class="form-text">Upload photos, receipts, police reports, or other supporting documents (Max 16MB each)</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-paper-plane me-1"></i><span>Submit Claim</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Policy Modal (moved inside body) -->
+    <div class="modal fade" id="createPolicyModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-shield-alt me-2"></i><span>Create Policy</span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="create-policy-form">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="policy-type" class="form-label">Policy Type</label>
+                            <select id="policy-type" class="form-select" required>
+                                <option value="">Select type</option>
+                                <option value="basic">Basic</option>
+                                <option value="standard">Standard</option>
+                                <option value="comprehensive">Comprehensive</option>
+                                <option value="premium">Premium</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="policy-coverage" class="form-label">Coverage Amount (USD)</label>
+                            <input type="number" id="policy-coverage" class="form-control" min="1" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="policy-premium" class="form-label">Premium (USD)</label>
+                            <input type="number" id="policy-premium" class="form-control" min="1" step="0.01" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="policy-number" class="form-label">Custom Policy Number (optional)</label>
+                            <input type="text" id="policy-number" class="form-control" maxlength="60" placeholder="Leave blank to auto-generate">
+                        </div>
+                        <div class="alert alert-info py-2 small">Leave policy number blank to auto-generate one.</div>
+                        <div id="create-policy-feedback" class="small text-danger"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" id="create-policy-submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i><span>Create Policy</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Claim Details Modal (moved inside body) -->
+    <div class="modal fade" id="claimDetailsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Claim Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="claim-details-body">
+                    <div class="text-center text-muted py-5">
+                        <div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Fraudulent Claim Detection Agent</h5>
+                    <p>AI-powered insurance fraud detection system</p>
+                </div>
+                <div class="col-md-6 text-end">
+                    <p>&copy; 2025 Fraud Detection Agent. <span>All rights reserved.</span></p>
+                    <p>
+                        <small>
+                            <a href="#" class="text-white-50">Privacy Policy</a> | 
+                            <a href="#" class="text-white-50">Terms of Service</a>
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Optional configuration override (create js/config.js from js/config.example.js) -->
+    <script>
+        (function() {
+            const cfg = document.createElement('script');
+            cfg.src = 'js/config.js';
+            cfg.onload = () => console.log('[Config] Loaded custom config.js');
+            cfg.onerror = () => console.log('[Config] No custom config.js found, using defaults');
+            document.currentScript.parentNode.insertBefore(cfg, document.currentScript);
+        })();
+    </script>
+    <!-- Core API client and main UI logic -->
+    <script src="js/api.js?v=20251008"></script>
+    <script src="js/main.js?v=20251008"></script>
+    
+</body>
+</html>

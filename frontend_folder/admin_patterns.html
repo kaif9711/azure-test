@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Fraud Patterns Admin</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    body { font-family: Arial, sans-serif; margin: 2rem; }
+    table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+    th, td { border: 1px solid #ccc; padding: 6px 8px; font-size: 0.9rem; }
+    th { background:#f4f4f4; }
+    .flex { display:flex; gap:0.5rem; }
+    .badge { padding:2px 6px; border-radius:4px; font-size:0.7rem; background:#eee; }
+    .inactive { opacity:0.5; }
+    form#create-form, form#edit-form { display:grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap:0.5rem; margin-top:1rem; }
+    form fieldset { border:1px solid #ddd; padding:0.75rem; }
+    form legend { font-weight:bold; }
+    #message { margin-top: 1rem; }
+    .hidden { display:none; }
+  </style>
+</head>
+<body>
+  <h1>Fraud Patterns Administration</h1>
+  <p>Manage fraud detection heuristic patterns. You must be authenticated as an admin. Provide your JWT below (temporary simple UI).</p>
+  <label>JWT Token:<br><input id="jwt" type="text" style="width:100%" placeholder="paste token here" /></label>
+  <div class="flex" style="margin-top:0.5rem;">
+    <button id="load-btn">Load Patterns</button>
+    <label><input type="checkbox" id="show-inactive" /> Show inactive</label>
+  </div>
+
+  <h2>Create New Pattern</h2>
+  <form id="create-form">
+    <input name="pattern_name" placeholder="Pattern Name" required />
+    <input name="pattern_type" placeholder="Type" required />
+    <input name="risk_weight" placeholder="Risk Weight (0-5)" type="number" step="0.01" min="0" max="5" required />
+    <input name="description" placeholder="Description" />
+    <label>Active <input name="is_active" type="checkbox" checked /></label>
+    <button type="submit">Create</button>
+  </form>
+
+  <h2>Existing Patterns</h2>
+  <table id="patterns-table">
+    <thead><tr><th>ID</th><th>Name</th><th>Type</th><th>Weight</th><th>Status</th><th>Updated</th><th>Actions</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <div id="edit-modal" class="hidden">
+    <h3>Edit Pattern <span id="edit-id"></span></h3>
+    <form id="edit-form">
+      <input name="pattern_name" placeholder="Pattern Name" />
+      <input name="pattern_type" placeholder="Type" />
+      <input name="risk_weight" placeholder="Risk Weight" type="number" step="0.01" min="0" max="5" />
+      <input name="description" placeholder="Description" />
+      <label>Active <input name="is_active" type="checkbox" /></label>
+      <div class="flex">
+        <button type="submit">Save</button>
+        <button type="button" id="cancel-edit">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <div id="message"></div>
+
+  <script src="/js/admin_patterns.js"></script>
+</body>
+</html>

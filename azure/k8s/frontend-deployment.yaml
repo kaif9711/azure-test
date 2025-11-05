@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-deployment
+spec:
+  replicas: 2 # Start with 2 copies
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+      - name: frontend
+        # [!!] YOU MUST UPDATE THIS IMAGE PATH [!!]
+        image: __ACR_LOGIN_SERVER__/frontend:latest
+        ports:
+        - containerPort: 80 # The port your React/Nginx server runs on
+        envFrom:
+        - configMapRef:
+            name: app-configmap

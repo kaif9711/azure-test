@@ -1,0 +1,31 @@
+name: Docker Build & Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Log in to Azure Container Registry
+        uses: azure/docker-login@v1
+        with:
+          # You MUST add these as GitHub Secrets
+          login-server: ${{ secrets.AZURE_ACR_LOGIN_SERVER }}
+          username: ${{ secrets.AZURE_ACR_USERNAME }}
+          password: ${{ secrets.AZURE_ACR_PASSWORD }}
+          
+      - name: Build and Push Backend Image
+        run: |
+          docker build -t ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/backend:latest ./backend_folder
+          docker push ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/backend:latest
+          
+      - name: Build and Push Frontend Image
+        run: |
+          docker build -t ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/frontend:latest ./frontend_folder
+          docker push ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/frontend:latest

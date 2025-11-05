@@ -1,0 +1,197 @@
+{
+  "app": {
+    "title": "Fraudulent Claim Detection Agent",
+    "brand": "Fraud Detection Agent",
+    "nav": {
+      "home": "Home",
+      "dashboard": "Dashboard",
+      "claims": "Claims",
+      "admin": "Admin",
+  "lessons": "Lessons",
+      "login": "Login",
+      "register": "Register",
+      "profile": "Profile",
+      "logout": "Logout"
+    },
+    "lessons_page": {
+      "title": "Lessons",
+      "subtitle": "Step-by-step modules with exercises"
+    },
+    "home": {
+      "hero_title": "AI-Powered Fraud Detection",
+      "hero_subtitle": "Protect your insurance business with advanced machine learning algorithms that detect fraudulent claims with unprecedented accuracy.",
+      "get_started": "Get Started",
+      "learn_more": "Learn More",
+      "features": {
+        "ai_title": "AI-Powered Analysis",
+        "ai_desc": "Advanced machine learning models analyze claim patterns, documents, and user behavior to identify potential fraud.",
+        "doc_title": "Document Verification",
+        "doc_desc": "Sophisticated document validation using OCR, image analysis, and authenticity checking to detect forged documents.",
+        "rt_title": "Real-time Monitoring",
+        "rt_desc": "Continuous monitoring of claim submissions with instant risk assessment and automated decision making."
+      },
+      "stats": {
+        "title": "System Performance",
+        "claims_processed": "Claims Processed",
+        "accuracy_rate": "Accuracy Rate",
+        "frauds_detected": "Frauds Detected",
+        "money_saved": "Money Saved"
+      }
+    },
+    "dashboard": {
+      "title": "Dashboard",
+      "subtitle": "Overview of your claims and system performance",
+      "cards": {
+        "total": "Total Claims",
+        "approved": "Approved",
+        "pending": "Under Review",
+        "rejected": "Rejected"
+      },
+      "trend": "Claims Trend",
+      "risk": "Risk Distribution",
+      "recent": {
+        "title": "Recent Claims",
+        "new": "New Claim",
+        "columns": {
+          "id": "Claim ID",
+          "amount": "Amount",
+          "date": "Date",
+          "status": "Status",
+          "risk": "Risk Score",
+          "actions": "Actions"
+        }
+      }
+    },
+    "claims": {
+      "title": "Claims Management",
+      "subtitle": "Manage and track your insurance claims",
+      "submit_new": "Submit New Claim",
+      "search_placeholder": "Search claims...",
+      "filters": {
+        "all": "All Statuses",
+        "submitted": "Submitted",
+        "under_review": "Under Review",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "investigation": "Investigation",
+        "closed": "Closed"
+      },
+      "sort": {
+        "newest": "Newest First",
+        "oldest": "Oldest First",
+        "amount_high": "Highest Amount",
+        "amount_low": "Lowest Amount",
+        "risk_high": "Highest Risk",
+        "risk_low": "Lowest Risk"
+      },
+      "columns": {
+        "id": "Claim ID",
+        "policy": "Policy",
+        "amount": "Amount",
+        "incident_date": "Incident Date",
+        "status": "Status",
+        "risk": "Risk Score",
+        "documents": "Documents",
+        "actions": "Actions"
+      }
+    },
+    "admin": {
+      "title": "Admin Dashboard",
+      "subtitle": "System administration and user management",
+      "stats": {
+        "total_users": "Total Users",
+        "fraud_rate": "Fraud Rate",
+        "ml_accuracy": "ML Accuracy",
+        "active_investigations": "Active Investigations"
+      },
+      "user_mgmt": "User Management",
+      "ml_perf": "ML Model Performance",
+      "audit_log": "Audit Log"
+    },
+    "modals": {
+      "login": {
+        "title": "Login",
+        "email": "Email",
+        "password": "Password",
+        "remember": "Remember me",
+        "cancel": "Cancel",
+        "submit": "Login"
+      },
+      "register": {
+        "title": "Register",
+        "first": "First Name",
+        "last": "Last Name",
+        "email": "Email",
+        "password": "Password",
+        "password_hint": "Password must be at least 8 characters long",
+        "confirm": "Confirm Password",
+        "terms_prefix": "I agree to the ",
+        "terms_link": "Terms and Conditions",
+        "cancel": "Cancel",
+        "submit": "Register"
+      },
+      "submit_claim": {
+        "title": "Submit New Claim",
+        "policy": "Policy",
+        "policy_placeholder": "Select a policy",
+        "policy_help": "If you have no policy, create one.",
+        "policy_new": "New Policy",
+        "amount": "Claim Amount",
+        "incident_date": "Incident Date",
+        "location": "Incident Location",
+        "location_placeholder": "City, State or Address",
+        "description": "Incident Description",
+        "description_placeholder": "Please describe what happened...",
+        "documents": "Supporting Documents",
+        "documents_help": "Upload photos, receipts, police reports, or other supporting documents (Max 16MB each)",
+        "cancel": "Cancel",
+        "submit": "Submit Claim"
+      },
+      "create_policy": {
+        "title": "Create Policy",
+        "type": "Policy Type",
+        "type_placeholder": "Select type",
+        "type_basic": "Basic",
+        "type_standard": "Standard",
+        "type_comprehensive": "Comprehensive",
+        "type_premium": "Premium",
+        "coverage": "Coverage Amount (USD)",
+        "premium": "Premium (USD)",
+        "number": "Custom Policy Number (optional)",
+        "number_placeholder": "Leave blank to auto-generate",
+        "number_hint": "Leave policy number blank to auto-generate one.",
+        "cancel": "Cancel",
+        "submit": "Create Policy"
+      },
+      "claim_details": {
+        "title": "Claim Details",
+        "close": "Close"
+      }
+    },
+    "footer": {
+      "title": "Fraudulent Claim Detection Agent",
+      "tagline": "AI-powered insurance fraud detection system",
+      "copyright": "All rights reserved.",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service"
+    },
+    "messages": {
+      "login_required": "Please log in to submit a claim.",
+      "profile_soon": "Profile editing feature coming soon!",
+      "limited_dashboard": "Limited dashboard view. Request elevated role for full metrics.",
+      "policy_created": "Policy created successfully",
+      "please_login": "Please log in first."
+    },
+    "statuses": {
+      "submitted": "Submitted",
+      "under_review": "Under Review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "investigation": "Investigation",
+      "closed": "Closed",
+      "low": "Low Risk",
+      "medium": "Medium Risk",
+      "high": "High Risk"
+    }
+  }
+}

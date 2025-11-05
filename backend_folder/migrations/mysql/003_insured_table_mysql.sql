@@ -1,0 +1,237 @@
+-- MySQL Migration: Create insured_tb table in fraud_claims schema
+-- Assumptions:
+--   * MySQL 8.0+
+--   * Existing database name: fraud_claims (run: CREATE DATABASE IF NOT EXISTS fraud_claims; )
+--   * This script ONLY creates the insured_tb table and seeds data.
+--   * Existing project migrations in repo are PostgreSQL-oriented; a full MySQL migration
+--     would require porting other tables (users, policies, claims, etc.).
+--   * CHECK constraints are supported in MySQL 8.0 but historically were parsed then ignored in older versions.
+--     Where data domain is small, ENUM is used instead of CHECK for strict enforcement.
+--   * No foreign key to policies.policy_number because the provided seed policy_numbers (POL-90001 .. POL-90170)
+--     do not yet exist in the policies table. Add later if desired.
+
+USE fraud_claims;
+
+DROP TABLE IF EXISTS insured_tb;
+CREATE TABLE insured_tb (
+  insured_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NULL,
+
+  -- Core Personal Data
+  first_name VARCHAR(100) NOT NULL,
+  last_name  VARCHAR(100) NOT NULL,
+  date_of_birth DATE NOT NULL,
+  gender ENUM('Male','Female','Other') NULL,
+  marital_status ENUM('Single','Married','Divorced','Widowed') NULL,
+  occupation VARCHAR(100) NULL,
+
+  -- Contact & Address
+  contact_number VARCHAR(25) NULL,
+  email VARCHAR(255) NULL,
+  address_line_1 VARCHAR(255) NULL,
+  city VARCHAR(100) NULL,
+  state_province VARCHAR(100) NULL,
+  zip_postal_code VARCHAR(20) NULL,
+
+  -- Policy / Financial
+  policy_number VARCHAR(50) NOT NULL UNIQUE,
+  annual_income DECIMAL(18,2) NULL,
+  credit_score_segment ENUM('Low','Medium','High') NULL,
+  policy_start_date DATE NULL,
+  policy_status ENUM('Active','Inactive','Suspended') NOT NULL DEFAULT 'Active',
+
+  -- Historical / System
+  total_claims_filed INT NOT NULL DEFAULT 0,
+  last_claim_date DATE NULL,
+  registration_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+  -- Data quality guard (may be ignored in older MySQL versions)
+  CHECK (annual_income IS NULL OR annual_income >= 0)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Optional FK if user accounts map to insured persons (uncomment when users table exists & populated):
+-- ALTER TABLE insured_tb ADD CONSTRAINT fk_insured_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
+
+-- Indexes
+CREATE INDEX idx_insured_last_name ON insured_tb(last_name);
+CREATE INDEX idx_insured_email ON insured_tb(email);
+CREATE INDEX idx_insured_policy_status ON insured_tb(policy_status);
+CREATE INDEX idx_insured_credit_segment ON insured_tb(credit_score_segment);
+
+-- Seed Data (Canonical 170 rows: POL-90001 .. POL-90170)
+INSERT INTO insured_tb (first_name, last_name, date_of_birth, gender, marital_status, occupation, contact_number, email, address_line_1, city, state_province, zip_postal_code, policy_number, annual_income, credit_score_segment, policy_start_date, policy_status, total_claims_filed, last_claim_date) VALUES
+('Alice','Johnson','1985-05-15','Female','Married','Engineer','555-0101','alice.johnson@corp.com','45 Maple Ave','Springfield','IL','62704','POL-90001',85000.00,'High','2019-01-20','Active',1,'2023-11-01'),
+('Robert','Smith','1972-11-22','Male','Single','Architect','555-0102','robert.smith@arch.net','12 Oak St','Fairview','CA','94533','POL-90002',120000.00,'High','2015-06-10','Active',0,NULL),
+('Emily','Davis','1998-03-03','Female','Single','Student','555-0103','emily.davis@uni.edu','30 Pine Ln','College Town','NY','10001','POL-90003',25000.00,'Low','2024-05-25','Active',0,NULL),
+('Michael','Brown','1965-07-10','Male','Divorced','Sales Manager','555-0104','michael.brown@sales.biz','7 Cedar Rd','Lakewood','FL','33101','POL-90004',75000.00,'Medium','2017-09-01','Active',3,'2024-01-15'),
+('Jessica','Wilson','1990-09-29','Female','Married','Teacher','555-0105','jessica.wilson@school.org','22 Elm St','Riverdale','TX','75001','POL-90005',60000.00,'Medium','2020-03-12','Active',1,'2021-08-05'),
+('David','Garcia','1981-01-08','Male','Married','IT Consultant','555-0106','david.garcia@tech.io','10 Willow Pkwy','Sunnyvale','CA','94086','POL-90006',150000.00,'High','2016-04-18','Active',0,NULL),
+('Sarah','Martinez','1977-12-05','Female','Divorced','Nurse','555-0107','sarah.martinez@hosp.net','18 Birch Ct','Middletown','OH','45044','POL-90007',55000.00,'Medium','2018-07-25','Active',2,'2022-09-30'),
+('Chris','Rodriguez','1995-02-14','Male','Single','Software Dev','555-0108','chris.rodriguez@dev.com','5 Aspen Trl','Tech City','WA','98101','POL-90008',95000.00,'High','2021-11-11','Active',0,NULL),
+('Laura','Hernandez','1960-04-20','Female','Widowed','Retiree','555-0109','laura.hernandez@home.net','8 Redwood Dr','Quiet Town','AZ','85001','POL-90009',40000.00,'Low','2010-10-01','Active',4,'2023-04-10'),
+('James','Lopez','1988-10-31','Male','Married','Electrician','555-0110','james.lopez@trade.co','25 Spruce Cir','Industry City','PA','19101','POL-90010',65000.00,'Medium','2019-02-28','Active',1,'2023-02-14'),
+('Maria','Gonzalez','1992-06-18','Female','Single','Marketing','555-0111','maria.gonzalez@mktg.com','14 Cherry Hill','Bayside','MA','02108','POL-90011',70000.00,'High','2022-08-01','Active',0,NULL),
+('Kevin','Miller','1975-08-25','Male','Married','Librarian','555-0112','kevin.miller@library.org','15 Poplar St','Booksville','IL','60601','POL-90012',50000.00,'Medium','2014-12-05','Active',0,NULL),
+('Linda','Perez','1955-03-17','Female','Divorced','Consultant','555-0113','linda.perez@cons.com','9 Violet Way','West End','NY','10020','POL-90013',100000.00,'High','2011-01-15','Active',1,'2019-05-20'),
+('George','Taylor','1999-01-01','Male','Single','Athlete','555-0114','george.taylor@sports.net','1 Oakwood Dr','Training Ctr','FL','33009','POL-90014',30000.00,'Low','2023-10-01','Active',1,'2024-08-01'),
+('Susan','Clark','1983-04-12','Female','Married','Dentist','555-0115','susan.clark@dental.com','2 Green St','Healthcare Heights','CA','90210','POL-90015',180000.00,'High','2013-05-18','Active',0,NULL),
+('Paul','Lewis','1970-10-28','Male','Married','Finance Analyst','555-0116','paul.lewis@finance.co','19 Gold Cir','Wall Street West','NY','10005','POL-90016',110000.00,'High','2015-11-20','Active',1,'2022-10-10'),
+('Nancy','Scott','1993-07-07','Female','Single','Graphic Designer','555-0117','nancy.scott@design.art','4 Silver Pl','Creative Hub','TX','77002','POL-90017',58000.00,'Medium','2021-04-04','Active',0,NULL),
+('Edward','King','1968-02-09','Male','Divorced','Lawyer','555-0118','edward.king@legal.net','11 Bronze Blvd','Justice Sq','IL','60611','POL-90018',200000.00,'High','2012-02-29','Active',2,'2020-03-01'),
+('Cynthia','Hill','1987-05-19','Female','Married','Photographer','555-0119','cynthia.hill@photo.com','24 Stone Way','Art District','CA','90012','POL-90019',45000.00,'Low','2023-07-19','Active',0,NULL),
+('Brian','Green','1979-08-04','Male','Married','Pilot','555-0120','brian.green@aero.com','33 Airfield Dr','Sky Port','FL','32801','POL-90020',140000.00,'High','2016-08-08','Active',1,'2022-04-20'),
+('Jennifer','Adams','1991-03-22','Female','Single','Journalist','555-0121','jen.adams@news.net','55 Press Ave','Media City','NY','10118','POL-90021',62000.00,'Medium','2022-01-01','Active',0,NULL),
+('Thomas','Baker','1963-11-11','Male','Widowed','Retired Police','555-0122','thomas.baker@protect.gov','88 Patrol Rd','Safety Zone','TX','78701','POL-90022',48000.00,'Low','2010-03-15','Active',3,'2023-06-30'),
+('Kelly','Carter','1980-06-16','Female','Married','Interior Designer','555-0123','kelly.carter@design.net','10 Design St','Style Hub','WA','98004','POL-90023',88000.00,'High','2018-05-01','Active',1,'2024-04-10'),
+('Jason','Fisher','1997-09-02','Male','Single','Chef','555-0124','jason.fisher@food.com','7 Fork Rd','Restaurant Row','CA','92101','POL-90024',42000.00,'Low','2024-02-14','Active',0,NULL),
+('Amy','Wright','1974-01-26','Female','Divorced','Realtor','555-0125','amy.wright@realty.biz','17 House Blvd','Property Heights','AZ','85251','POL-90025',90000.00,'Medium','2017-03-30','Active',2,'2021-11-22'),
+('Steven','Hall','1986-12-19','Male','Married','Mechanic','555-0126','steven.hall@auto.com','50 Garage Ln','Service City','PA','19406','POL-90026',52000.00,'Low','2020-10-01','Active',1,'2024-03-19'),
+('Donna','Walker','1969-04-07','Female','Widowed','Bookkeeper','555-0127','donna.walker@books.net','60 Ledger Ct','Finance Park','MA','02451','POL-90027',41000.00,'Medium','2013-09-10','Active',0,NULL),
+('Mark','Allen','1994-11-06','Male','Single','Game Developer','555-0128','mark.allen@game.dev','8 Pixel Pl','Digital Zone','IL','60103','POL-90028',78000.00,'High','2022-06-05','Active',0,NULL),
+('Lisa','Young','1982-02-14','Female','Married','Therapist','555-0129','lisa.young@therapy.org','16 Calm Cir','Wellness Ctr','NY','10502','POL-90029',80000.00,'High','2018-01-20','Active',1,'2023-01-01'),
+('Jeff','Sanchez','1976-05-30','Male','Divorced','Truck Driver','555-0130','jeff.sanchez@truck.co','99 Highway Hts','Freight Junction','FL','34994','POL-90030',57000.00,'Low','2014-06-15','Active',2,'2022-07-28'),
+('Rachel','Flores','1996-03-10','Female','Single','UX Designer','555-0131','rachel.flores@ux.com','12 Wireframe Wk','Design Spot','TX','78704','POL-90031',68000.00,'Medium','2023-01-10','Active',0,NULL),
+('Gary','Morris','1961-09-21','Male','Married','Engineer','555-0132','gary.morris@eng.biz','44 Gear Grv','Industry Park','CA','95003','POL-90032',130000.00,'High','2010-07-07','Active',0,NULL),
+('Betty','Rogers','1973-11-02','Female','Widowed','Banker','555-0133','betty.rogers@bank.com','77 Vault Vly','Finance Row','OH','43015','POL-90033',72000.00,'Medium','2015-08-18','Active',1,'2021-03-03'),
+('Eric','Reed','1990-12-12','Male','Single','Musician','555-0134','eric.reed@music.net','3 Note Nook','Arts Center','WA','98109','POL-90034',35000.00,'Low','2024-01-05','Active',0,NULL),
+('Pamela','Cook','1984-06-28','Female','Married','Accountant','555-0135','pamela.cook@cpa.com','21 Tax Trl','Business Blvd','AZ','85308','POL-90035',92000.00,'High','2019-07-14','Active',1,'2023-09-20'),
+('Justin','Morgan','1971-04-01','Male','Divorced','Construction','555-0136','justin.morgan@build.co','15 Block Ct','Hardware Hub','PA','15201','POL-90036',53000.00,'Low','2012-11-22','Active',3,'2024-05-01'),
+('Vicki','Bell','1993-02-17','Female','Single','Veterinarian','555-0137','vicki.bell@vet.org','4 Furry Fld','Animal Acres','MA','01002','POL-90037',76000.00,'Medium','2021-05-15','Active',0,NULL),
+('Scott','Carter','1989-10-03','Male','Married','Data Scientist','555-0138','scott.carter@data.ai','5 Code Crt','AI Valley','IL','60563','POL-90038',135000.00,'High','2017-04-04','Active',0,NULL),
+('Janet','Baker','1966-07-13','Female','Married','Homemaker','555-0139','janet.baker@home.com','6 Kitchen Knt','Suburban Bliss','NY','11701','POL-90039',38000.00,'Low','2016-10-10','Active',1,'2020-02-02'),
+('Frank','White','1978-01-22','Male','Single','Firefighter','555-0140','frank.white@fire.gov','7 Ladder Ln','Emergency Ctr','FL','32901','POL-90040',70000.00,'Medium','2015-02-02','Active',0,NULL),
+('Helen','Harris','1995-05-08','Female','Divorced','HR Specialist','555-0141','helen.harris@hr.com','10 Resume Rd','Corporate Pk','TX','73301','POL-90041',61000.00,'Medium','2022-09-09','Active',1,'2024-06-25'),
+('Wayne','Young','1962-12-04','Male','Married','Doctor','555-0142','wayne.young@med.net','3 Hospital Hwy','Medical Mile','CA','92612','POL-90042',220000.00,'High','2011-03-22','Active',0,NULL),
+('Karen','Moore','1980-03-06','Female','Single','Artist','555-0143','karen.moore@art.gallery','1 Blue Brush Dr','Gallery Dist','OH','44113','POL-90043',30000.00,'Low','2023-03-17','Active',1,'2024-02-08'),
+('Phillip','Adams','1977-09-17','Male','Divorced','Journalist','555-0144','phillip.adams@media.org','13 Inkwell Rd','Printing Pl','WA','98052','POL-90044',77000.00,'Medium','2017-11-30','Active',2,'2023-12-12'),
+('Teresa','Nelson','1967-02-28','Female','Married','CFO','555-0145','teresa.nelson@exec.com','2 Executive Tower','Finance Ctr','AZ','85034','POL-90045',250000.00,'High','2010-04-01','Active',0,NULL),
+('Victor','Baker','1998-11-20','Male','Single','Intern','555-0146','victor.baker@newbie.com','5 Intern Isle','Entry Level','PA','17011','POL-90046',20000.00,'Low','2024-07-01','Active',0,NULL),
+('Wendy','Campbell','1985-06-05','Female','Married','Manager','555-0147','wendy.campbell@mgmt.co','19 Command Ctr','HQ','MA','01880','POL-90047',115000.00,'High','2016-09-09','Active',1,'2023-03-25'),
+('Howard','Fisher','1970-01-09','Male','Widowed','Professor','555-0148','howard.fisher@acad.edu','2 Education Ave','University Pk','IL','61801','POL-90048',89000.00,'Medium','2013-12-12','Active',0,NULL),
+('Irene','Hayes','1992-04-18','Female','Single','Pharmacist','555-0149','irene.hayes@pharm.net','3 Pill Pl','Health Ctr','NY','14202','POL-90049',82000.00,'High','2020-05-01','Active',0,NULL),
+('Keith','Jenkins','1981-07-27','Male','Married','Engineer','555-0150','keith.jenkins@indus.com','7 Steel St','Factory Zone','FL','32003','POL-90050',125000.00,'High','2015-03-03','Active',2,'2024-07-01'),
+('Zoe','Thompson','1999-02-01','Female','Single','Social Worker','555-0151','zoe.thompson@soc.org','4 Help Hts','Community Ctr','TX','79901','POL-90051',40000.00,'Low','2023-08-15','Active',1,'2024-04-04'),
+('Yasin','Umar','1975-10-10','Male','Married','IT Manager','555-0152','yasin.umar@global.net','11 Tech Blvd','Global HQ','CA','95125','POL-90052',160000.00,'High','2014-01-01','Active',0,NULL),
+('Xavier','Vera','1968-04-29','Male','Divorced','Chef','555-0153','xavier.vera@rest.com','10 Spice St','Gourmet Row','OH','45202','POL-90053',60000.00,'Medium','2016-06-16','Active',3,'2023-01-08'),
+('Will','West','1994-08-01','Male','Single','Marketing','555-0154','will.west@ad.co','2 Ad Agency Rd','Marketing Sq','WA','98368','POL-90054',63000.00,'Medium','2022-04-20','Active',0,NULL),
+('Una','Quinn','1983-03-24','Female','Married','Engineer','555-0155','una.quinn@aero.com','5 Jet Blvd','Aerospace Pk','AZ','85701','POL-90055',118000.00,'High','2017-02-14','Active',1,'2024-01-01'),
+('Sam','Patel','1976-11-16','Male','Married','Businessman','555-0156','sam.patel@biz.com','7 Trading Trl','Commerce Ctr','PA','19001','POL-90056',190000.00,'High','2010-09-01','Active',0,NULL),
+('Rita','Osborn','1997-05-05','Female','Single','Receptionist','555-0157','rita.osborn@front.desk','1 Lobby Ln','Office Park','MA','02210','POL-90057',32000.00,'Low','2024-06-10','Active',0,NULL),
+('Oscar','Nixon','1964-08-13','Male','Divorced','Retired Military','555-0158','oscar.nixon@vet.gov','8 Barracks Blvd','Base Town','IL','62521','POL-90058',45000.00,'Low','2011-04-12','Active',2,'2023-05-15'),
+('Nina','Murphy','1987-01-28','Female','Married','Architect','555-0159','nina.murphy@design.co','12 Blueprint Dr','Design Dist','NY','14604','POL-90059',105000.00,'High','2016-03-01','Active',1,'2022-08-20'),
+('Mitch','Lee','1979-04-04','Male','Married','Gardener','555-0160','mitch.lee@land.com','2 Green Thumb Ln','Nursery Rd','FL','33408','POL-90060',49000.00,'Low','2018-10-10','Active',1,'2024-03-01'),
+('Lila','Katz','1991-11-25','Female','Single','Writer','555-0161','lila.katz@write.net','3 Story St','Creative Qtr','TX','77057','POL-90061',50000.00,'Medium','2023-04-01','Active',0,NULL),
+('John','Jones','1966-09-12','Male','Widowed','School Principal','555-0162','john.jones@school.edu','1 Principal Pkwy','Education Ctr','CA','93101','POL-90062',98000.00,'High','2012-07-25','Active',0,NULL),
+('Ivy','Ibarra','1984-12-08','Female','Divorced','Hair Stylist','555-0163','ivy.ibarra@salon.com','4 Scissor Sq','Beauty Blvd','OH','43215','POL-90063',39000.00,'Low','2017-05-18','Active',3,'2024-05-05'),
+('Hank','Hoffman','1970-02-02','Male','Married','Engineer','555-0164','hank.hoffman@mech.biz','6 Wrench Wy','Tool Town','WA','98007','POL-90064',112000.00,'High','2014-04-04','Active',1,'2022-06-10'),
+('Gina','Graham','1996-03-09','Female','Single','Retail Worker','555-0165','gina.graham@shop.net','8 Checkout Cir','Mall Center','AZ','85012','POL-90065',30000.00,'Low','2023-01-20','Active',0,NULL),
+('Fred','Franklin','1989-08-28','Male','Single','Pilot','555-0166','fred.franklin@fly.com','1 Runway Rd','Aviation Pk','PA','19106','POL-90066',145000.00,'High','2020-09-01','Active',1,'2024-08-28'),
+('Eliza','Evans','1961-05-19','Female','Married','Librarian','555-0167','eliza.evans@books.edu','9 Shelf St','Knowledge Hub','MA','01970','POL-90067',48000.00,'Medium','2011-08-11','Active',0,NULL),
+('Dan','Duncan','1974-10-06','Male','Married','Carpenter','555-0168','dan.duncan@wood.co','11 Sawdust Sq','Mill Town','IL','60440','POL-90068',54000.00,'Low','2015-05-05','Active',2,'2023-09-01'),
+('Carly','Chen','1993-11-07','Female','Single','Data Analyst','555-0169','carly.chen@data.org','1 Data Dr','Analytics Ctr','NY','12054','POL-90069',85000.00,'High','2021-06-15','Active',0,NULL),
+('Ben','Byrne','1969-04-25','Male','Divorced','Sales Rep','555-0170','ben.byrne@sales.com','15 Deal Pl','Commerce Hill','FL','34201','POL-90070',73000.00,'Medium','2013-10-01','Active',4,'2024-05-10'),
+('Ava','Andrews','1986-06-13','Female','Married','Executive','555-0171','ava.andrews@exec.net','2 C Suite Ct','Corporate Zone','TX','75201','POL-90071',170000.00,'High','2018-02-01','Active',0,NULL),
+('Zane','Zimmerman','1971-01-18','Male','Married','Engineer','555-0172','zane.zimmerman@eng.com','3 Blueprint Blv','Design Town','CA','92037','POL-90072',135000.00,'High','2014-09-20','Active',1,'2023-07-04'),
+('Yara','Yates','1995-07-29','Female','Single','Teacher','555-0173','yara.yates@teach.org','4 School St','Education Ln','OH','44011','POL-90073',55000.00,'Medium','2022-10-10','Active',0,NULL),
+('Xin','Xie','1960-03-03','Male','Widowed','Retired Banker','555-0174','xin.xie@retire.net','5 Pension Pkwy','Quiet Life','WA','98270','POL-90074',42000.00,'Low','2011-06-01','Active',2,'2021-04-14'),
+('Walt','Wang','1988-10-14','Male','Divorced','Marketing','555-0175','walt.wang@ad.com','6 Campaign Ct','Ad Hub','AZ','85016','POL-90075',79000.00,'Medium','2019-03-25','Active',1,'2024-01-20'),
+('Violet','Valdez','1991-05-27','Female','Married','Nurse','555-0176','violet.valdez@care.net','7 Health Hts','Medical Plaza','PA','17101','POL-90076',88000.00,'High','2020-07-07','Active',0,NULL),
+('Uri','Underwood','1973-12-06','Male','Single','Truck Driver','555-0177','uri.underwood@haul.co','8 Truck Stop Rd','Transport Ctr','MA','01701','POL-90077',51000.00,'Low','2014-11-11','Active',3,'2023-10-30'),
+('Tara','Turner','1982-02-18','Female','Married','Finance Manager','555-0178','tara.turner@fin.biz','9 Money Mews','Wealth Sq','IL','60505','POL-90078',122000.00,'High','2015-04-01','Active',0,NULL),
+('Stan','Stone','1996-09-08','Male','Single','Student','555-0179','stan.stone@college.edu','10 Dorm Dr','Campus Town','NY','11790','POL-90079',28000.00,'Low','2024-04-01','Active',0,NULL),
+('Rina','Reyes','1965-04-04','Female','Divorced','Consultant','555-0180','rina.reyes@strategy.com','11 Plan Pl','Consulting Ctr','FL','33602','POL-90080',105000.00,'High','2012-01-25','Active',1,'2020-09-10'),
+('Quentin','Quinn','1989-11-29','Male','Married','Software Engineer','555-0181','quentin.quinn@code.io','12 Binary Bvd','Code City','TX','77084','POL-90081',97000.00,'High','2021-01-01','Active',0,NULL),
+('Penny','Patel','1970-07-16','Female','Married','Business Owner','555-0182','penny.patel@own.biz','13 Entrepreneur E','Start-up Zone','CA','94103','POL-90082',155000.00,'High','2013-05-05','Active',2,'2023-03-01'),
+('Oli','Olsen','1994-01-23','Male','Single','Teacher','555-0183','oli.olsen@school.com','14 Chalkboard Crt','School Dist','OH','44301','POL-90083',49000.00,'Medium','2022-07-20','Active',0,NULL),
+('Noemi','Nunez','1968-06-02','Female','Widowed','Retired Nurse','555-0184','noemi.nunez@home.org','15 Recovery Rd','Quiet Suburb','WA','98402','POL-90084',35000.00,'Low','2010-12-01','Active',4,'2024-02-29'),
+('Mike','McKay','1980-09-09','Male','Divorced','Mechanic','555-0185','mike.mckay@repair.co','16 Wrench Wy','Garage Area','AZ','85202','POL-90085',56000.00,'Low','2015-06-01','Active',1,'2023-11-20'),
+('Luna','Lenz','1997-03-19','Female','Single','Graphic Designer','555-0186','luna.lenz@art.studio','17 Palette Pl','Art Colony','PA','19038','POL-90086',50000.00,'Medium','2023-09-15','Active',0,NULL),
+('Ken','Koch','1963-12-12','Male','Married','Professor','555-0187','ken.koch@prof.edu','18 Lecture Ln','Campus West','MA','02492','POL-90087',100000.00,'High','2011-02-02','Active',0,NULL),
+('Jana','Jain','1985-04-20','Female','Married','HR Manager','555-0188','jana.jain@hr.net','19 Staff St','Recruit Ctr','IL','60010','POL-90088',92000.00,'High','2019-10-01','Active',1,'2024-04-15'),
+('Ian','Ives','1978-06-06','Male','Divorced','Electrician','555-0189','ian.ives@wire.com','20 Volt Vly','Power Plant','NY','11201','POL-90089',65000.00,'Medium','2016-01-20','Active',2,'2023-08-01'),
+('Holly','Huff','1990-10-10','Female','Single','Marketing','555-0190','holly.huff@market.co','21 Target Trl','Ad Zone','FL','32114','POL-90090',59000.00,'Medium','2022-03-01','Active',0,NULL),
+('Greg','Gomez','1967-08-03','Male','Married','Accountant','555-0191','greg.gomez@tax.net','22 Audit Ave','CPA Ctr','TX','77583','POL-90091',110000.00,'High','2013-04-20','Active',1,'2021-09-09'),
+('Fiona','Fox','1998-05-13','Female','Single','Student','555-0192','fiona.fox@study.edu','23 Textbook Trl','University Pk','CA','92093','POL-90092',20000.00,'Low','2024-01-15','Active',0,NULL),
+('Ethan','Evans','1981-02-22','Male','Married','Construction Manager','555-0193','ethan.evans@site.biz','24 Hardhat Hill','Building Site','OH','45402','POL-90093',85000.00,'Medium','2017-06-06','Active',0,NULL),
+('Debra','Dixon','1975-07-07','Female','Divorced','Real Estate Agent','555-0194','debra.dixon@home.com','25 Listing Ln','Realty Row','WA','98199','POL-90094',95000.00,'High','2015-11-01','Active',3,'2024-03-20'),
+('Carl','Cruz','1992-04-09','Male','Single','Mechanic','555-0195','carl.cruz@fixit.co','26 Spanner St','Repair Zone','AZ','85281','POL-90095',48000.00,'Low','2023-05-05','Active',1,'2023-07-25'),
+('Betty','Burke','1964-11-04','Female','Widowed','Retired Teacher','555-0196','betty.burke@learn.org','27 Lesson Ln','School Rd','PA','19355','POL-90096',38000.00,'Low','2010-06-16','Active',2,'2022-10-01'),
+('Adam','Alonso','1987-03-17','Male','Married','Software Dev','555-0197','adam.alonso@app.dev','28 Code Crt','Tech Hub','MA','01545','POL-90097',120000.00,'High','2018-09-09','Active',0,NULL),
+('Zara','Zimmerman','1999-01-28','Female','Single','UX Designer','555-0198','zara.zimmerman@ui.com','29 Sketch St','Design Qtr','IL','60640','POL-90098',60000.00,'Medium','2023-11-01','Active',0,NULL),
+('Yusuf','Yildirim','1970-07-12','Male','Married','Engineer','555-0199','yusuf.yildirim@eng.net','30 Blueprint Blvd','Innovation Ctr','NY','10301','POL-90099',150000.00,'High','2014-05-15','Active',1,'2024-06-10'),
+('Xenia','Xu','1983-05-01','Female','Divorced','Doctor','555-0200','xenia.xu@clinic.org','31 Clinic Cir','Health Plaza','FL','33901','POL-90100',190000.00,'High','2016-02-01','Active',2,'2022-09-01'),
+('Walter','Wood','1994-09-05','Male','Single','Architect','555-0201','walter.wood@bld.com','32 Arch Ave','Design Row','TX','77494','POL-90101',88000.00,'High','2020-08-01','Active',0,NULL),
+('Vera','Vance','1967-12-25','Female','Married','Librarian','555-0202','vera.vance@read.edu','33 Book Blvd','Literary Ctr','CA','92507','POL-90102',45000.00,'Low','2011-01-10','Active',1,'2019-11-25'),
+('Ulysses','Upton','1978-04-16','Male','Married','Pilot','555-0203','ulysses.upton@flight.co','34 Hangar Hts','Air Base','OH','45069','POL-90103',130000.00,'High','2017-03-03','Active',0,NULL),
+('Trina','Tucker','1990-06-11','Female','Single','Marketing','555-0204','trina.tucker@promote.net','35 Ad Alley','Promo Park','WA','98370','POL-90104',65000.00,'Medium','2022-05-12','Active',0,NULL),
+('Saul','Soto','1963-09-20','Male','Divorced','Retired Teacher','555-0205','saul.soto@home.net','36 Memory Ln','Old Town','AZ','85351','POL-90105',38000.00,'Low','2010-09-01','Active',4,'2023-12-01'),
+('Rosa','Ruiz','1985-01-05','Female','Married','Engineer','555-0206','rosa.ruiz@mech.com','37 Gear Grv','Mech Qtr','PA','15014','POL-90106',115000.00,'High','2018-11-11','Active',1,'2024-05-20'),
+('Pete','Powell','1998-08-08','Male','Single','Student','555-0207','pete.powell@uni.net','38 Quad Qtr','Student Ctr','MA','02138','POL-90107',22000.00,'Low','2024-02-01','Active',0,NULL),
+('Olivia','Owen','1976-03-30','Female','Widowed','Chef','555-0208','olivia.owen@food.biz','39 Kitchen Knt','Culinary Ctr','IL','60174','POL-90108',60000.00,'Medium','2015-05-25','Active',1,'2022-11-11'),
+('Norm','Nash','1989-11-01','Male','Married','Data Scientist','555-0209','norm.nash@ai.co','40 Algorithm Aly','Data Dist','NY','10530','POL-90109',140000.00,'High','2020-01-01','Active',0,NULL),
+('Molly','May','1961-05-09','Female','Divorced','Professor','555-0210','molly.may@lecturer.edu','41 Campus Cir','Academia Sq','FL','33301','POL-90110',95000.00,'Medium','2013-10-05','Active',2,'2023-01-20'),
+('Luke','Long','1995-02-14','Male','Single','Electrician','555-0211','luke.long@volt.net','42 Wire Wk','Service Hub','TX','78664','POL-90111',52000.00,'Low','2023-03-01','Active',0,NULL),
+('Kim','Kaye','1982-10-29','Female','Married','Journalist','555-0212','kim.kaye@reporter.com','43 News Nook','Press Row','CA','95350','POL-90112',72000.00,'Medium','2016-07-17','Active',1,'2024-04-01'),
+('Jack','James','1970-04-19','Male','Married','Sales Manager','555-0213','jack.james@mgmt.com','44 Deal Dr','Sales Ctr','OH','43123','POL-90113',105000.00,'High','2014-02-28','Active',0,NULL),
+('Holly','Hope','1993-08-02','Female','Single','Graphic Designer','555-0214','holly.hope@pic.art','45 Pixel Pl','Design Dist','WA','98033','POL-90114',58000.00,'Medium','2021-10-10','Active',0,NULL),
+('Gabe','Gomez','1966-01-07','Male','Widowed','Retired Engineer','555-0215','gabe.gomez@ret.eng','46 Tool Trl','Mechanics Qtr','AZ','85204','POL-90115',40000.00,'Low','2010-03-01','Active',3,'2023-11-05'),
+('Flora','Fry','1987-11-17','Female','Married','HR Specialist','555-0216','flora.fry@hr.co','47 Staff St','Corporate Pk','PA','19064','POL-90116',80000.00,'High','2019-04-04','Active',1,'2023-05-01'),
+('Eli','Evans','1979-05-24','Male','Divorced','Truck Driver','555-0217','eli.evans@road.net','48 Highway Hts','Truck Stop','MA','02142','POL-90117',55000.00,'Low','2015-08-01','Active',2,'2024-01-10'),
+('Dana','Day','1991-03-14','Female','Single','Architect','555-0218','dana.day@build.org','49 Sketch Sq','Design Hub','IL','60654','POL-90118',90000.00,'High','2021-02-28','Active',0,NULL),
+('Caleb','Cox','1960-12-09','Male','Married','Businessman','555-0219','caleb.cox@invest.biz','50 Stock St','Wealth Mgmt','NY','10004','POL-90119',200000.00,'High','2010-08-08','Active',0,NULL),
+('Beth','Bell','1995-09-22','Female','Single','Nurse','555-0220','beth.bell@med.com','51 Bed Blvd','Hospital Ctr','FL','32548','POL-90120',70000.00,'Medium','2023-02-14','Active',1,'2024-07-20'),
+('Alex','Adams','1983-06-03','Male','Married','IT Consultant','555-0221','alex.adams@code.com','52 Logic Ln','Tech Park','TX','78613','POL-90121',145000.00,'High','2016-09-01','Active',0,NULL),
+('Zara','Zane','1977-01-15','Female','Divorced','Journalist','555-0222','zara.zane@news.net','53 Press Pl','Media Ctr','CA','95054','POL-90122',62000.00,'Medium','2015-03-10','Active',2,'2023-09-05'),
+('Yusuf','Yasin','1998-04-29','Male','Single','Chef','555-0223','yusuf.yasin@cook.org','54 Pot Pkwy','Culinary Hub','OH','43026','POL-90123',42000.00,'Low','2024-03-03','Active',0,NULL),
+('Xena','Xavier','1962-11-11','Female','Widowed','Retired Manager','555-0224','xena.xavier@home.net','55 Quiet Qtr','Retirement Vly','WA','98105','POL-90124',35000.00,'Low','2010-10-01','Active',3,'2023-04-04'),
+('Wayne','West','1980-08-08','Male','Married','Engineer','555-0225','wayne.west@build.co','56 Frame Dr','Construction Ctr','AZ','85226','POL-90125',120000.00,'High','2017-05-01','Active',1,'2022-11-01'),
+('Vivi','Vogel','1993-01-20','Female','Single','Graphic Designer','555-0226','vivi.vogel@design.art','57 Color Cir','Art District','PA','17050','POL-90126',55000.00,'Medium','2021-06-16','Active',0,NULL),
+('Toby','Turner','1976-06-28','Male','Married','Sales Rep','555-0227','toby.turner@sell.com','58 Product Pl','Commerce Park','MA','01609','POL-90127',75000.00,'Medium','2015-10-10','Active',1,'2023-03-05'),
+('Sue','Smith','1989-12-04','Female','Married','Therapist','555-0228','sue.smith@mind.org','59 Peace Pkwy','Wellness Ctr','IL','60187','POL-90128',85000.00,'High','2020-09-20','Active',0,NULL),
+('Ryan','Reed','1965-03-10','Male','Divorced','Lawyer','555-0229','ryan.reed@justice.net','60 Court Crt','Legal Row','NY','11501','POL-90129',210000.00,'High','2012-04-04','Active',2,'2021-08-15'),
+('Quincy','Quinn','1997-10-17','Female','Single','Student','555-0230','quincy.quinn@learn.edu','61 Library Ln','Campus Town','FL','33407','POL-90130',25000.00,'Low','2024-05-10','Active',0,NULL),
+('Pablo','Perez','1981-05-05','Male','Married','Accountant','555-0231','pablo.perez@tax.com','62 Audit Aly','CPA Ctr','TX','78205','POL-90131',115000.00,'High','2017-01-01','Active',0,NULL),
+('Nadia','Nunez','1970-07-24','Female','Widowed','Homemaker','555-0232','nadia.nunez@home.co','63 Family Fld','Suburbia','CA','95403','POL-90132',39000.00,'Low','2013-06-13','Active',1,'2022-01-20'),
+('Max','Miller','1994-02-12','Male','Single','Software Dev','555-0233','max.miller@dev.io','64 Code Crt','Tech Hub','OH','44074','POL-90133',95000.00,'High','2022-01-01','Active',0,NULL),
+('Liz','Lopez','1963-09-01','Female','Divorced','Retired Educator','555-0234','liz.lopez@retire.org','65 Wisdom Wy','Elder Acres','WA','98005','POL-90134',40000.00,'Low','2011-09-09','Active',3,'2024-06-01'),
+('Kyle','King','1987-03-29','Male','Married','Marketing Manager','555-0235','kyle.king@brand.biz','66 Image Ind','Brand Ctr','AZ','85282','POL-90135',105000.00,'High','2019-05-05','Active',1,'2023-08-10'),
+('Jillian','Jones','1975-11-21','Female','Married','Nurse Practitioner','555-0236','jillian.jones@np.net','67 Health Hill','Care Ctr','PA','15146','POL-90136',110000.00,'High','2016-04-12','Active',0,NULL),
+('Ivan','Ives','1998-06-15','Male','Single','Intern','555-0237','ivan.ives@work.co','68 Cubicle Crt','Office Park','MA','02110','POL-90137',20000.00,'Low','2024-08-01','Active',0,NULL),
+('Hannah','Hall','1960-01-01','Female','Widowed','Retired CFO','555-0238','hannah.hall@fin.org','69 Vault Vly','Finance Row','IL','60515','POL-90138',150000.00,'High','2010-01-01','Active',4,'2023-01-01'),
+('Grant','Green','1982-10-03','Male','Divorced','Mechanic','555-0239','grant.green@auto.net','70 Wrench Wy','Service Bay','NY','10310','POL-90139',58000.00,'Low','2015-02-02','Active',3,'2024-04-20'),
+('Faye','Fisher','1995-04-19','Female','Single','UX Designer','555-0240','faye.fisher@ui.net','71 Interface Int','Design Hub','FL','32808','POL-90140',68000.00,'Medium','2023-01-01','Active',0,NULL),
+('Evan','Elias','1973-11-28','Male','Married','Engineer','555-0241','evan.elias@eng.gov','72 CAD Crt','Tech Park','TX','77007','POL-90141',130000.00,'High','2014-07-25','Active',1,'2022-10-20'),
+('Diane','Dunn','1968-06-18','Female','Married','Librarian','555-0242','diane.dunn@lib.org','73 Shelf St','Book Town','CA','95926','POL-90142',48000.00,'Low','2012-05-15','Active',0,NULL),
+('Cody','Cross','1986-09-05','Male','Single','Journalist','555-0243','cody.cross@paper.com','74 Pen Pl','News Row','OH','45219','POL-90143',60000.00,'Medium','2020-03-01','Active',1,'2024-02-14'),
+('Britney','Bond','1997-03-11','Female','Divorced','Student','555-0244','britney.bond@uni.net','75 Study St','Campus West','WA','98109','POL-90144',25000.00,'Low','2023-09-01','Active',0,NULL),
+('Arthur','Allen','1961-05-25','Male','Widowed','Retired Teacher','555-0245','arthur.allen@ret.edu','76 Class Cir','School Rd','AZ','85710','POL-90145',40000.00,'Low','2010-04-01','Active',2,'2022-07-07'),
+('Zoe','Smith','1984-12-10','Female','Married','Accountant','555-0246','zoe.smith@ledger.com','77 Tax Trl','Business Ctr','PA','15219','POL-90146',95000.00,'High','2018-01-20','Active',1,'2023-03-01'),
+('Yara','Ali','1991-07-02','Female','Single','HR Specialist','555-0247','yara.ali@staff.net','78 Resume Rd','Recruit Hub','MA','02148','POL-90147',60000.00,'Medium','2021-04-10','Active',0,NULL),
+('Xavier','Diaz','1970-01-19','Male','Married','Doctor','555-0248','xavier.diaz@health.org','79 Rx Rd','Medical Qtr','IL','60606','POL-90148',220000.00,'High','2014-11-22','Active',0,NULL),
+('Will','Evans','1995-08-03','Male','Single','Architect','555-0249','will.evans@design.co','80 Draft Dr','Arch Park','NY','10019','POL-90149',88000.00,'High','2023-04-04','Active',0,NULL),
+('Vera','Fisher','1963-04-14','Female','Divorced','Consultant','555-0250','vera.fisher@advice.com','81 Strategy St','Consulting Ctr','FL','32701','POL-90150',105000.00,'High','2012-08-01','Active',2,'2021-12-12'),
+('Tom','Garcia','1988-10-27','Male','Married','Electrician','555-0251','tom.garcia@power.net','82 Volt Vly','Utility Zone','TX','77082','POL-90151',65000.00,'Medium','2019-06-01','Active',1,'2024-01-01'),
+('Sarah','Hill','1977-12-09','Female','Widowed','Nurse','555-0252','sarah.hill@care.com','83 Bedside Blvd','Health Hill','CA','90033','POL-90152',70000.00,'Medium','2015-05-18','Active',3,'2023-05-01'),
+('Robert','Iyer','1990-03-22','Male','Single','Data Scientist','555-0253','robert.iyer@ai.com','84 Algorithm Aly','Tech City','OH','45240','POL-90153',135000.00,'High','2020-10-10','Active',0,NULL),
+('Quinn','Jackson','1966-06-06','Female','Married','Engineer','555-0254','quinn.jackson@mech.net','85 Wrench Wy','Tool Town','WA','98006','POL-90154',118000.00,'High','2013-09-01','Active',0,NULL),
+('Paul','Kent','1999-01-01','Male','Single','Student','555-0255','paul.kent@stud.edu','86 Campus Cir','University Pk','AZ','85287','POL-90155',20000.00,'Low','2024-06-01','Active',0,NULL),
+('Mia','Lee','1984-05-20','Female','Divorced','Marketing Manager','555-0256','mia.lee@promo.biz','87 Ad Alley','Promo Park','PA','19107','POL-90156',90000.00,'Medium','2016-08-08','Active',1,'2022-07-28'),
+('Leo','Li','1973-10-15','Male','Married','Chef','555-0257','leo.li@gourmet.net','88 Spice St','Culinary Hub','MA','01007','POL-90157',60000.00,'Medium','2014-03-03','Active',2,'2023-09-30'),
+('Kate','King','1961-02-18','Female','Widowed','Retired Banker','555-0258','kate.king@ret.bank','89 Vault Vly','Finance Row','IL','62794','POL-90158',42000.00,'Low','2011-04-14','Active',4,'2024-05-01'),
+('Jeff','Jones','1987-07-27','Male','Single','Journalist','555-0259','jeff.jones@ink.net','90 Pen Pl','Media Ctr','NY','10022','POL-90159',65000.00,'Medium','2022-02-28','Active',0,NULL),
+('Irene','Iyer','1992-12-01','Female','Married','Teacher','555-0260','irene.iyer@school.com','91 Lesson Ln','Education Ctr','FL','32931','POL-90160',58000.00,'Medium','2020-05-05','Active',1,'2023-07-04'),
+('Henry','Hall','1976-05-15','Male','Divorced','Construction','555-0261','henry.hall@build.co','92 Hardhat Hill','Industrial Pk','TX','75034','POL-90161',52000.00,'Low','2015-07-07','Active',3,'2024-04-10'),
+('Gina','Green','1969-11-20','Female','Married','Therapist','555-0262','gina.green@mind.net','93 Couch Crt','Wellness Hub','CA','94025','POL-90162',80000.00,'High','2013-10-01','Active',0,NULL),
+('Frank','Fox','1985-02-28','Male','Single','Architect','555-0263','frank.fox@design.art','94 Drafting Dr','Arch Row','OH','45342','POL-90163',90000.00,'High','2019-11-11','Active',0,NULL),
+('Erin','Evans','1998-09-09','Female','Single','Student','555-0264','erin.evans@uni.org','95 Dorm Dr','College Town','WA','98103','POL-90164',20000.00,'Low','2024-07-25','Active',0,NULL),
+('David','Dunn','1960-03-24','Male','Widowed','Retired Pilot','555-0265','david.dunn@ret.aero','96 Hangar Hts','Air Base','AZ','85304','POL-90165',45000.00,'Low','2010-02-01','Active',5,'2023-02-28'),
+('Chris','Clark','1974-05-07','Male','Married','Finance Analyst','555-0266','chris.clark@money.com','97 Gold Cir','Financial Ctr','PA','19010','POL-90166',110000.00,'High','2017-09-01','Active',1,'2024-06-15'),
+('Bella','Brown','1993-11-13','Female','Single','Marketing','555-0267','bella.brown@ad.co','98 Campaign Ct','Ad Agency','MA','01821','POL-90167',55000.00,'Medium','2022-09-01','Active',0,NULL),
+('Aaron','Adams','1967-08-20','Male','Divorced','Lawyer','555-0268','aaron.adams@law.net','99 Justice Sq','Legal Row','IL','60431','POL-90168',200000.00,'High','2013-03-30','Active',2,'2020-11-11'),
+('Samantha','Jones','1980-04-10','Female','Married','CFO','555-0269','samantha.jones@exec.co','100 Executive Dr','Corporate HQ','NY','10036','POL-90169',250000.00,'High','2015-06-01','Active',0,NULL),
+('Leo','Rodriguez','1975-09-19','Male','Single','Mechanic','555-0270','leo.rod@repair.com','101 Service Way','Auto Shop','FL','33060','POL-90170',48000.00,'Low','2018-07-25','Active',1,'2024-08-10');
+
+-- Post-load considerations:
+-- * Add derived stats via a view rather than storing if consistency is critical.
+-- * Add FK to policies when corresponding policies exist.
+-- * Implement ETL to sync total_claims_filed / last_claim_date from claims table.
